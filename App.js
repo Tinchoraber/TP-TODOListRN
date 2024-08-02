@@ -3,10 +3,13 @@ import { View, Text, Button, FlatList, TextInput, StyleSheet, TouchableOpacity, 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ListItem, CheckBox } from 'react-native-elements';
 import { Swipeable, GestureHandlerRootView } from 'react-native-gesture-handler';
+import Modal from 'react-native-modal';
 
 const App = () => {
   const [tareas, setTareas] = useState([]);
   const [nombreTarea, setNombreTarea] = useState('');
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [descripcionTarea, setDescripcionTarea] = useState('');
 
   useEffect(() => {
     const cargarTareas = async () => {
@@ -40,10 +43,13 @@ const App = () => {
       const nuevaTarea = {
         id: Date.now().toString(),
         name: nombreTarea,
+        description: descripcionTarea,
         completed: false,
       };
       setTareas([...tareas, nuevaTarea]);
       setNombreTarea('');
+      setDescripcionTarea('');
+      setIsModalVisible(false);
     } else {
       Alert.alert('Error', 'Ingrese un nombre de tarea');
     }
@@ -79,6 +85,7 @@ const App = () => {
           <ListItem.Title style={item.completed ? styles.completedTask : null}>
             {item.name}
           </ListItem.Title>
+          {item.description ? <ListItem.Subtitle>{item.description}</ListItem.Subtitle> : null}
         </ListItem.Content>
       </ListItem>
     </Swipeable>
@@ -89,18 +96,39 @@ const App = () => {
       <View style={styles.header}>
         <Text style={styles.headerText}>TODO List</Text>
       </View>
-      <TextInput
-        placeholder="Enter task name"
-        value={nombreTarea}
-        onChangeText={setNombreTarea}
-        style={styles.input}
-      />
-      <Button title="Add Task" onPress={agregarTarea} />
       <FlatList
         data={tareas}
         renderItem={renderItem}
         keyExtractor={item => item.id}
       />
+      <View style={styles.addButtonContainer}>
+        <Button
+          title="Agregar Tarea"
+          color="#4fc3f7"
+          onPress={() => setIsModalVisible(true)}
+        />
+      </View>
+      <Modal
+        isVisible={isModalVisible}
+        onBackdropPress={() => setIsModalVisible(false)}
+      >
+        <View style={styles.modalContent}>
+          <TextInput
+            placeholder="Nombre de la tarea"
+            value={nombreTarea}
+            onChangeText={setNombreTarea}
+            style={styles.input}
+          />
+          <TextInput
+            placeholder="Descripción (opcional)"
+            value={descripcionTarea}
+            onChangeText={setDescripcionTarea}
+            style={[styles.input, { height: 80 }]}
+            multiline
+          />
+          <Button title="Agregar" onPress={agregarTarea} />
+        </View>
+      </Modal>
     </GestureHandlerRootView>
   );
 };
@@ -130,7 +158,7 @@ const styles = StyleSheet.create({
     height: 40,
     borderColor: 'gray',
     borderWidth: 1,
-    margin: 20,
+    margin: 10,
     paddingHorizontal: 10,
   },
   completedTask: {
@@ -149,6 +177,16 @@ const styles = StyleSheet.create({
   deleteText: {
     color: 'white',
     fontWeight: 'bold',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    padding: 22,
+    borderRadius: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  addButtonContainer: {
+    padding: 10,
   },
 });
 
